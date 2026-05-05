@@ -72,6 +72,11 @@ def add_new_record():
     quantity = int(input("Enter Quantity: "))
     price = int(input("Enter The Price: "))
     location = input("Enter Location (A/B/C/D): ").upper()
+    signer = input("Which Invnetory Node is submitting this Record? (A/B/C/D): ").upper().strip()
+
+    if signer not in Inventory_Keys:
+        price("\nInvalid Inventory node. Record is Rejected :( .")
+        return
 
     new_record = {
         "item_id": item_id,
@@ -86,13 +91,33 @@ def add_new_record():
         if item ["item_id"] == item_id:
             print("\nOh no Error: The Item ID already exists. Record rejected :( .")
             return
+        
+    keys = Inventory_Keys[signer]
+
+    hash_hex, hash_int = hash_record(new_record)
+    signature = rsa_sign(hash_int, keys["d"], keys["n"])
+    recovered_hash = rsa_verify(signature, keys["e"], keys["n"])
+
+    print("\n--- Digital Signature Process ---")
+    print(f"Submitting Node: Inventory {signer}")
+    print(f"Record Hash Hex: {hash_hex}")
+    print(f"Record Hash Integer: {hash_int}")
+    print(f"Digital Signature: {signature}")
+    print(f"Recovered Hash from Signature: {recovered_hash}")
+
+    if recovered_hash != hash_int:
+        print("\nSignature Verification: INVALID")
+        print("The Record is Rejected")
+        return
+    
+    print("\nSignature Verification: Valid")
 
     for filename in Inventory_Files.values():
         inventory_data = load_inventory(filename)
         inventory_data.append(new_record)
         save_inventory(filename, inventory_data)
 
-    print("\nNew Record Created")
+    print("\nNew Record Created and Added to all Inventory nodes :) ")
     print(
         f"ID: {new_record['item_id']} | "
         f"QTY: {new_record['quantity']} | "
