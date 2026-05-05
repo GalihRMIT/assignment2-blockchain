@@ -75,7 +75,7 @@ def add_new_record():
     signer = input("Which Invnetory Node is submitting this Record? (A/B/C/D): ").upper().strip()
 
     if signer not in Inventory_Keys:
-        price("\nInvalid Inventory node. Record is Rejected :( .")
+        print("\nInvalid Inventory node. Record is Rejected :( .")
         return
 
     new_record = {
@@ -88,29 +88,44 @@ def add_new_record():
     inventory_check = load_inventory("data/inventory_A.json")
 
     for item in inventory_check:
-        if item ["item_id"] == item_id:
+        if str (item ["item_id"]) == item_id:
             print("\nOh no Error: The Item ID already exists. Record rejected :( .")
             return
         
-    keys = Inventory_Keys[signer]
+    signer_keys = Inventory_Keys[signer]
 
     hash_hex, hash_int = hash_record(new_record)
-    signature = rsa_sign(hash_int, keys["d"], keys["n"])
-    recovered_hash = rsa_verify(signature, keys["e"], keys["n"])
+    signature = rsa_sign(hash_int, signer_keys["d"], signer_keys["n"])
 
     print("\n--- Digital Signature Process ---")
     print(f"Submitting Node: Inventory {signer}")
     print(f"Record Hash Hex: {hash_hex}")
     print(f"Record Hash Integer: {hash_int}")
     print(f"Digital Signature: {signature}")
-    print(f"Recovered Hash from Signature: {recovered_hash}")
-
-    if recovered_hash != hash_int:
-        print("\nSignature Verification: INVALID")
-        print("The Record is Rejected")
-        return
     
-    print("\nSignature Verification: Valid")
+    #The other Inventory nodes would vewrify utilizing the sender's public key
+    print("\n--- Signature Verification is done by other Inventory Nodes ---")
+
+    verification_result = {}
+
+    for node in Inventory_Keys:
+        if node != signer:
+            recovered_hash = rsa_verify(signature, signer_keys["e"], signer_keys["n"])
+
+            if recovered_hash == hash_int:
+                verification_result[node] = "VALID"
+                print(f"Inventory {node} Verification: VALID")
+            else:
+                verification_result[node] = "INVALID"
+                print(f"Inventory {node} Verification: INVALID")
+        
+    if "INVALID" in verification_result.values():
+        print("\nFinal Signature Result: INVALID")
+        print("The record is Rejected before storage")
+        return
+        
+    print("\nFinal Signature Result: VALID")
+    print("All the recieveing nodes are verified by the sender's signature. ")
 
     for filename in Inventory_Files.values():
         inventory_data = load_inventory(filename)
