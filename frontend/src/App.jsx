@@ -1,14 +1,9 @@
 // App.jsx
 // Root component — owns the shared inventory state and tab navigation.
-// Inventory is initialised directly from the 4 JSON files (no backend needed).
-// All changes (add/delete) update React state in memory; the JSON files on disk
-// are the source of truth when the page is refreshed.
+// Inventory is fetched fresh from Flask on mount (GET /api/inventory) so the
+// UI always reflects the actual JSON files on disk.
 
-import { useState } from 'react'
-import invA from '../../data/inventory_A.json'
-import invB from '../../data/inventory_B.json'
-import invC from '../../data/inventory_C.json'
-import invD from '../../data/inventory_D.json'
+import { useState, useEffect } from 'react'
 import Dashboard    from './components/Dashboard.jsx'
 import AddRecord    from './components/AddRecord.jsx'
 import QueryItem    from './components/QueryItem.jsx'
@@ -18,30 +13,37 @@ import KeysViewer   from './components/KeysViewer.jsx'
 const TABS = ['Dashboard', 'Add Record', 'Query', 'Delete', 'Node Keys']
 
 export default function App() {
-  const [tab, setTab] = useState('Dashboard')
+  const [tab, setTab]             = useState('Dashboard')
+  const [inventory, setInventory] = useState(null)
+  const [loadError, setLoadError] = useState(null)
 
-  // Single source of truth for all 4 node ledgers — passed down as props
-  const [inventory, setInventory] = useState({
-    A: invA, B: invB, C: invC, D: invD,
-  })
+  // Load all 4 node ledgers from Flask on first render
+  useEffect(() => {
+    fetch('/api/inventory')
+      .then(r => r.json())
+      .then(setInventory)
+      .catch(() => setLoadError('Could not reach the Flask server. Run:  python api.py'))
+  }, [])
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <header className="bg-slate-900 border-b border-slate-800">
+    <div className="min-h-screen bg-black text-white">
+      <header className="bg-neutral-950 border-b border-neutral-800">
         <div className="max-w-6xl mx-auto px-6 pt-5">
-          <h1 className="text-xl font-bold text-cyan-400 mb-1">⛓️ Secure DLT Inventory System</h1>
-          <p className="text-slate-500 text-xs mb-4">RSA-signed distributed ledger · 4 nodes · SHA-256</p>
+          <h1 className="text-xl font-bold tracking-wide mb-1">Secure DLT Inventory System</h1>
+          <p className="text-neutral-500 text-xs mb-4">
+            RSA-signed distributed ledger &middot; 4 nodes &middot; SHA-256
+          </p>
 
-          {/* Tab bar — controls which feature panel is shown */}
+          {/* Tab bar */}
           <nav className="flex gap-1">
             {TABS.map(t => (
               <button
                 key={t}
                 onClick={() => setTab(t)}
-                className={`px-4 py-2 text-sm rounded-t-lg border-t border-l border-r transition-colors ${
+                className={`px-4 py-2 text-sm rounded-t border-t border-l border-r transition-colors ${
                   tab === t
-                    ? 'bg-slate-950 text-cyan-400 border-slate-700'
-                    : 'text-slate-500 border-transparent hover:text-slate-300'
+                    ? 'bg-black text-white border-neutral-700'
+                    : 'text-neutral-500 border-transparent hover:text-neutral-300'
                 }`}
               >
                 {t}
@@ -52,25 +54,39 @@ export default function App() {
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8">
-        {tab === 'Dashboard'  && <Dashboard inventory={inventory} />}
-        {tab === 'Add Record' && (
-          // setInventory lets AddRecord append the new record to all 4 nodes in state
-          <AddRecord
-            inventory={inventory}
-            setInventory={setInventory}
-            onDone={() => setTab('Dashboard')}
-          />
+        {loadError && (
+          <div className="border border-neutral-700 rounded px-5 py-4 text-neutral-400 text-sm">
+            {loadError}
+          </div>
         )}
-        {tab === 'Query'      && <QueryItem inventory={inventory} />}
-        {tab === 'Delete'     && (
-          // setInventory lets DeleteRecord remove the record from all 4 nodes in state
-          <DeleteRecord
-            inventory={inventory}
-            setInventory={setInventory}
-            onDone={() => setTab('Dashboard')}
-          />
+
+        {!inventory && !loadError && (
+          <div className="text-center py-24 text-neutral-600">
+            <p>Loading inventory from Flask...</p>
+          </div>
         )}
-        {tab === 'Node Keys'  && <KeysViewer />}
+
+        {inventory && (
+          <>
+            {tab === 'Dashboard'  && <Dashboard inventory={inventory} />}
+            {tab === 'Add Record' && (
+              <AddRecord
+                inventory={inventory}
+                setInventory={setInventory}
+                onDone={() => setTab('Dashboard')}
+              />
+            )}
+            {tab === 'Query'  && <QueryItem inventory={inventory} />}
+            {tab === 'Delete' && (
+              <DeleteRecord
+                inventory={inventory}
+                setInventory={setInventory}
+                onDone={() => setTab('Dashboard')}
+              />
+            )}
+            {tab === 'Node Keys' && <KeysViewer />}
+          </>
+        )}
       </main>
     </div>
   )
