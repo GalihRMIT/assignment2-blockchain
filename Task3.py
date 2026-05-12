@@ -21,7 +21,7 @@ pkg_q   = KEYS["PKG"]["q"]
 pkg_e   = KEYS["PKG"]["e"]
 pkg_n   = pkg_p * pkg_q
 pkg_phi = (pkg_p - 1) * (pkg_q - 1)
-pkg_d   = pow(pkg_e, -1, pkg_phi)          # master secret
+pkg_d   = pow(pkg_e, -1, pkg_phi)          # private key
 
 # Procurement Officer (querying user)
 po_p   = KEYS["ProcurementOfficer"]["p"]
@@ -38,7 +38,7 @@ node_rand    = [KEYS["RandomValues"][k]  for k in NODE_LBLS]   # [621,721,821,92
 node_secrets = [pow(iid, pkg_d, pkg_n)   for iid in node_ids]  # gj = ij^d mod n
 
 # Inventory records keyed by inventory ID
-INVENTORY = {"126": 32, "127": 20, "128": 22, "129": 12}
+INVENTORY = {"126": 621, "127": 721, "128": 821, "129": 921}
 
 # ─────────────────────────────────────────────────────────────────
 #  API — query: Step 1 params + Step 3 Harn multi-signature
@@ -56,7 +56,7 @@ def query():
     # ── STEP 1 output ──────────────────────────────────────────────
     lines = [
         "=================================================================",
-        "  STEP 1: CRYPTOGRAPHIC PARAMETER INITIALISATION",
+        "  CRYPTOGRAPHIC PARAMETER INITIALISATION",
         "=================================================================",
         "",
         "[PKG - Private Key Generator]",
@@ -84,7 +84,6 @@ def query():
         lines.append(f"           g_{lbl} = {g}")
     lines += [
         "",
-        "  Step 1 complete - all parameters initialised.",
         "-----------------------------------------------------------------",
         "",
         f"  Query received: Inventory {item_id}",
@@ -131,7 +130,7 @@ def query():
     lines += [
         "",
         "=================================================================",
-        "  STEP 3: HARN MULTI-SIGNATURE",
+        "  HARN MULTI-SIGNATURE",
         "=================================================================",
         "",
         f"  Message (m) : \"{m}\"",
@@ -181,7 +180,7 @@ def query():
     lines += [
         "",
         "=================================================================",
-        "  STEP 4: SECURE DELIVERY — ENCRYPT APPROVED RESPONSE",
+        "  SECURE DELIVERY — ENCRYPT APPROVED RESPONSE",
         "=================================================================",
         "",
         "  Encrypting signed result with Procurement Officer public key",
@@ -215,7 +214,7 @@ def query():
     lines += [
         "",
         "=================================================================",
-        "  STEP 5: PROCUREMENT OFFICER — DECRYPT AND VERIFY",
+        "  PROCUREMENT OFFICER — DECRYPT AND VERIFY",
         "=================================================================",
         "",
         "  Decrypting with Procurement Officer private key (po_d)",
