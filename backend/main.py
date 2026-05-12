@@ -1,5 +1,6 @@
 import json
-from crypto_utils import generate_rsa_values, hash_record, rsa_sign, rsa_verify
+from backend.key_store import Inventory_Keys
+from backend.crypto_utils import generate_rsa_values, hash_record, rsa_sign, rsa_verify
 
 #This is to hold all of the inventory file path in one location. 
 Inventory_Files = {
@@ -7,38 +8,6 @@ Inventory_Files = {
     "Inventory B": "data/inventory_B.json",
     "Inventory C": "data/inventory_C.json",
     "Inventory D": "data/inventory_D.json"
-}
-
-#list of all of the RSA key values from the given assignment 2 list of key document
-Inventory_Keys = {
-    "A": generate_rsa_values(
-        p=1210613765735147311106936311866593978079938707,
-        q=1247842850282035753615951347964437248190231863,
-        e=815459040813953176289801
-
-    ),
-
-    "B": generate_rsa_values(
-        p=787435686772982288169641922308628444877260947,
-        q=1325305233886096053310340418467385397239375379,
-        e=692450682143089563609787
-
-    ),
-
-    "C": generate_rsa_values(
-        p=1014247300991039444864201518275018240361205111,
-        q=904030450302158058469475048755214591704639633,
-        e=1158749422015035388438057
-
-    ),
-
-    "D": generate_rsa_values(
-        p=1287737200891425621338551020762858710281638317,
-        q=1330909125725073469794953234151525201084537607,
-        e=33981230465225879849295979
-
-    ),
-
 }
 
 def load_inventory(filename):
