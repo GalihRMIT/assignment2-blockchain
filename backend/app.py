@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+# None of the inventory logic occurs here it just imports the service and function
 from inventory_service import (
     get_all_inventories,
     add_record,
