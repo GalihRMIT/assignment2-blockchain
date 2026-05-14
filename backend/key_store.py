@@ -1,6 +1,7 @@
 from crypto_utils import generate_rsa_values
 
-#list of all of the RSA key values from the given assignment 2 list of key document
+# list of all of the RSA key values from the given assignment 2 list of key document
+# The system uses p, q, and e to calcualte the n, phi, and d values.
 Inventory_Keys = {
     "A": generate_rsa_values(
         p=1210613765735147311106936311866593978079938707,
