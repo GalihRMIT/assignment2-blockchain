@@ -183,32 +183,27 @@ function App() {
       {/* Section 3: Query with Harn Multi-Signature */}
       <section className="tool-box">
         <h2>Query Inventory Node</h2>
-        <p>
-          Enter a node ID to retrieve its full inventory, collectively signed and
-          verified by the Harn Multi-Signature scheme across all nodes.
-        </p>
 
-        <label>Inventory Node ID:</label>
-        <p className="hint">001 = Node A &nbsp;|&nbsp; 002 = Node B &nbsp;|&nbsp; 003 = Node C &nbsp;|&nbsp; 004 = Node D</p>
+        <label>Message:</label>
         <input
           value={queryItemId}
-          placeholder="e.g. 001"
+          placeholder="Inventory node ID"
           onChange={(e) => setQueryItemId(e.target.value)}
         />
 
         <button onClick={handleQuery} disabled={queryLoading}>
-          {queryLoading ? "Processing..." : "Query Inventory"}
+          {queryLoading ? "Processing..." : "Query"}
         </button>
 
         {queryResult && (
           <div className="output">
-            <h3>Query Result — Inventory Node {queryResult.node}</h3>
+            <h3>Query Result</h3>
             <p><b>Status:</b> {queryResult.message}</p>
             <p><b>Consensus Result:</b> {queryResult.consensus_result}</p>
 
-            {queryResult.inventory && queryResult.inventory.length > 0 && (
+            {queryResult.item && (
               <>
-                <h4>Inventory Records</h4>
+                <h4>Item Record</h4>
                 <table>
                   <thead>
                     <tr>
@@ -219,14 +214,12 @@ function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {queryResult.inventory.map((item) => (
-                      <tr key={item.item_id}>
-                        <td>{item.item_id}</td>
-                        <td>{item.quantity}</td>
-                        <td>{item.price}</td>
-                        <td>{item.location}</td>
-                      </tr>
-                    ))}
+                    <tr>
+                      <td>{queryResult.item.item_id}</td>
+                      <td>{queryResult.item.quantity}</td>
+                      <td>{queryResult.item.price}</td>
+                      <td>{queryResult.item.location}</td>
+                    </tr>
                   </tbody>
                 </table>
               </>
@@ -234,10 +227,10 @@ function App() {
 
             {queryResult.lines && queryResult.lines.length > 0 && (
               <>
-                <h4>Harn Multi-Signature Proof</h4>
+                <h4>Cryptographic Proof</h4>
                 <div className="crypto-log">
                   {queryResult.lines.map((line, i) => (
-                    <div key={i}>{line === "" ? " " : line}</div>
+                    <div key={i}>{line === "" ? " " : line}</div>
                   ))}
                 </div>
               </>

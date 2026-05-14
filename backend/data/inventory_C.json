@@ -22,11 +22,5 @@
         "quantity": 12,
         "price": 18,
         "location": "A"
-    },
-    {
-        "item_id": "005",
-        "quantity": 2,
-        "price": 2,
-        "location": "A"
     }
 ]
