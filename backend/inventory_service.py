@@ -258,9 +258,6 @@ def query_quantity(item_id):
             "consensus_result": "NO RESULT"
         }
 
-    # Pull the quantity out from record, this is what the PO or the message is querying
-    qty = found_item["quantity"]
-
     # Initialise cryptographic parameters
     # Build the lines[] list that will be displayed in the UI step-by-step.
     # PKG RSA key construction (standard RSA):
@@ -311,7 +308,7 @@ def query_quantity(item_id):
     # The Harn scheme lets ALL four nodes jointly sign a message so that the combined signature can be verified against ALL identities at once.
     # No single node's partial signature is valid on its own, they must all cooperate, which prevents any one node from faking the response.
     # The message being signed is the query result itself:
-    m = f"Item {item_id}: quantity = {qty}"
+    m = item_id
 
     # 2a. Partial Commitments: t_j = r_j ^ e mod n
     # Each node j raises its random value r_j to the PKG public exponent e.
