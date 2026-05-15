@@ -32,6 +32,96 @@ def get_all_inventories():
 
     return inventories
 
+# 3 phase PBFT 
+def validate_record_node (node_name, filename, record, signature, signer_keys, hash_int):
+    node_result = {
+        "signature_check": None,
+        "duplicate_check": None,
+        "decision": None
+    }
+
+    recovered_hash = rsa_verify(signature, signer_keys["e"], signer_keys["n"])
+
+    if recovered_hash == hash_int:
+        node_result["signature_check"] = "VALID"
+    else:
+        node_result["signature_check"] = "INVALID"
+
+    inventory_data = load_inventory(filename)
+
+    duplicate_found = False
+
+    for item in inventory_data:
+        if str (item["item_id"]).strip() == str(record["item_id"]).strip():
+            duplicate_found = True
+            break
+
+    if duplicate_found:
+        node_result["duplicate_check"] = "DUPLICATE FOUND"
+    else:
+        node_result["duplicate_check"] = "NO DUPLICATE"
+
+    if node_result["signature_check"] == "VALID" and node_result["duplicate_check"] == "NO DUPLICATE":
+        node_result["decision"] = "ACCEPT"
+    else:
+        node_result["decision"] = "REJECT"
+
+    return node_result
+
+def run_pbft_consensus(record, signature, signer_keys, hash_int):
+    pbft_results = {
+        "pre_prepare_phase": {},
+        "prepare_phase": {},
+        "commit_phase": {}
+    }
+
+    # The first Phase: Pre Prepare
+    pbft_results["pre_prepare_phase"] = {
+        "proposal": "Signed record proposed by submitting inventory node",
+        "record": record,
+        "signature": signature
+    }
+
+    # The Second Phase: Prepare 
+    accept_count = 0
+    reject_count = 0
+
+    for node_name, filename in Inventory_Files.items():
+        node_result = validate_record_node(
+            node_name=node_name,
+            filename=filename,
+            record=record,
+            signature=signature,
+            signer_keys=signer_keys,
+            hash_int=hash_int
+        )
+
+        pbft_results["prepare_phase"][node_name] = node_result
+
+        if node_result["decision"] == "ACCEPT":
+            accept_count += 1
+        else :
+            reject_count += 1
+        
+    # The Third Phase: commit
+    total_nodes = len(Inventory_Files)
+    required_accepts = 3  # This shows that for the 4 nodes the PBFT requires 3 out of 4 agreement
+
+    consensus_passed = accept_count >= required_accepts
+
+    pbft_results["commit_phase"] = {
+        "total_nodes": total_nodes,
+        "required_accepts": required_accepts,
+        "accept_count": accept_count,
+        "reject_count": reject_count,
+        "consensus_result": "ACCEPTED" if consensus_passed else "REJECTED"
+    }
+
+    return consensus_passed,pbft_results
+
+
+
+
 # Self explaniroty function it adds a new record 
 def add_record(item_id, quantity, price, location, signer):
     # just makes the input clean a -> A 
@@ -53,52 +143,37 @@ def add_record(item_id, quantity, price, location, signer):
         "location": location
     }
 
-    # Just loads inventroy A and checks if an existing ID exist 
-    inventory_check = load_inventory("data/inventory_A.json")
-
-    # If it does exist it prevents a duplicate ID
-    for item in inventory_check:
-        if str(item["item_id"]) == str(item_id):
-            return {
-                "success": False,
-                "message": "Item ID already exists. Record rejected."
-            }
-
     # If the singer of the message is A then it takes the key for Inventory A 
     signer_keys = Inventory_Keys[signer]
 
     # This just transforms the inventory record into a hash 
     hash_hex, hash_int = hash_record(new_record)
+
     # This creates the RSA digital signiture and proves that the record was signed by the inventroy node that owns the private key d
     signature = rsa_sign(hash_int, signer_keys["d"], signer_keys["n"])
 
-    # This is where the system simulates the other inventory nodes checking for signiture
-    # IMPORTANT NOTE: the loop will go rhough every node excpet for the signer node 
-    verification_results = {}
+    # This will run the simplified PBFT consensus
+    consensus_passed, pbft_results = run_pbft_consensus(
+        record=new_record,
+        signature=signature,
+        signer_keys=signer_keys,
+        hash_int=hash_int
+    )
 
-    for node in Inventory_Keys:
-        if node != signer:
-            # add notice to this part where it uses the singers public key and not the verifiers own key 
-            recovered_hash = rsa_verify(signature, signer_keys["e"], signer_keys["n"])
-
-            if recovered_hash == hash_int:
-                verification_results[f"Inventory {node}"] = "VALID"
-            else:
-                verification_results[f"Inventory {node}"] = "INVALID"
-
-    # This just rejects any record if even one node says invalid 
-    if "INVALID" in verification_results.values():
+    # If it fails the PBFT consensus will not store the recrod 
+    if not consensus_passed:
         return {
             "success": False,
-            "message": "Signature verification failed. Record rejected.",
+            "message": "PBFT consensus failed. Record rejected Uhoh.",
             "record": new_record,
+            "submitting_node": f"Inventory {signer}",
             "hash_hex": hash_hex,
             "hash_int": hash_int,
             "signature": signature,
-            "verification_results": verification_results,
+            "pbft_results": pbft_results,
             "consensus_result": "REJECTED"
         }
-
+    
     # If all of the verification result are valid then the record gets added to every JSON inventory file
     for filename in Inventory_Files.values():
         inventory_data = load_inventory(filename)
@@ -114,7 +189,7 @@ def add_record(item_id, quantity, price, location, signer):
         "hash_hex": hash_hex,
         "hash_int": hash_int,
         "signature": signature,
-        "verification_results": verification_results,
+         "pbft_results": pbft_results,
         "consensus_result": "ACCEPTED"
     }
 

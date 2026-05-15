@@ -183,16 +183,46 @@ function App() {
             <p><b>Digital Signature:</b> {addResult.signature}</p>
             <p><b>Consensus Result:</b> {addResult.consensus_result}</p>
 
-            {addResult.verification_results && (
+            {addResult.pbft_results && (
               <>
-                <h4>Verification Results</h4>
-                {Object.entries(addResult.verification_results).map(
+                <h4>PBFT Pre-Prepare Phase</h4>
+                <p>
+                  <b>Proposal:</b>{" "}
+                  {addResult.pbft_results.pre_prepare_phase.proposal}
+                </p>
+
+                <h4>PBFT Prepare Phase</h4>
+                {Object.entries(addResult.pbft_results.prepare_phase).map(
                   ([node, result]) => (
-                    <p key={node}>
-                      {node}: {result}
-                    </p>
+                    <div className="node-result" key={node}>
+                      <p><b>{node}</b></p>
+                      <p>Signature Check: {result.signature_check}</p>
+                      <p>Duplicate Check: {result.duplicate_check}</p>
+                      <p>Node Decision: {result.decision}</p>
+                    </div>
                   )
                 )}
+                 <h4>PBFT Commit Phase</h4>
+                  <p>
+                    <b>Total Nodes:</b>{" "}
+                    {addResult.pbft_results.commit_phase.total_nodes}
+                  </p>
+                  <p>
+                    <b>Required Accepts:</b>{" "}
+                    {addResult.pbft_results.commit_phase.required_accepts}
+                  </p>
+                  <p>
+                    <b>Accept Count:</b>{" "}
+                    {addResult.pbft_results.commit_phase.accept_count}
+                  </p>
+                  <p>
+                    <b>Reject Count:</b>{" "}
+                    {addResult.pbft_results.commit_phase.reject_count}
+                  </p>
+                  <p>
+                    <b>Final PBFT Decision:</b>{" "}
+                    {addResult.pbft_results.commit_phase.consensus_result}
+                  </p>
               </>
             )}
           </div>

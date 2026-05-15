@@ -75,3 +75,10 @@ td {
   background: #f8f8f8;
   word-break: break-word;
 }
+
+.node-result {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #aaa;
+  background: white;
+}
