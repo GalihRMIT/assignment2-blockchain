@@ -76,22 +76,14 @@ td {
   word-break: break-word;
 }
 
-.hint {
-  margin: 4px 0 6px;
-  color: #555;
-  font-size: 13px;
+.node-result {
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #aaa;
+  background: white;
 }
 
 .crypto-log {
-  margin-top: 8px;
-  padding: 10px;
-  background: #f0f0f0;
-  color: black;
-  font-family: "Courier New", monospace;
-  font-size: 12px;
-  max-height: 400px;
-  overflow-y: auto;
   white-space: pre;
-  word-break: keep-all;
-  border: 1px solid #999;
+  line-height: 1.6;
 }
