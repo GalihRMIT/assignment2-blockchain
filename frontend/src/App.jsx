@@ -166,6 +166,25 @@ function App() {
             <p><b>Hash Hex:</b> {addResult.hash_hex}</p>
             <p><b>Hash Integer:</b> {addResult.hash_int}</p>
             <p><b>Digital Signature:</b> {addResult.signature}</p>
+            
+            {addResult.signature_verification && (
+              <>
+                <h4>Signature Verification</h4>
+                <p>
+                  <b>Original Hash:</b>{" "}
+                  {addResult.signature_verification.original_hash}
+                </p>
+                <p>
+                  <b>Recovered Hash:</b>{" "}
+                  {addResult.signature_verification.recovered_hash}
+                </p>
+                <p>
+                  <b>Verification Result:</b>{" "}
+                  {addResult.signature_verification.valid ? "VALID" : "INVALID"}
+                </p>
+              </>
+            )}
+
             <p><b>Consensus Result:</b> {addResult.consensus_result}</p>
 
             {addResult.pbft_results && (

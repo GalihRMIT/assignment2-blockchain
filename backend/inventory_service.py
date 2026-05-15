@@ -193,6 +193,18 @@ def add_record(item_id, quantity, price, location, signer):
     # This creates the RSA digital signiture and proves that the record was signed by the inventroy node that owns the private key d
     signature = rsa_sign(hash_int, signer_keys["d"], signer_keys["n"])
 
+    # This verifies the RSA signature that is done by recovering the hash using the signer public key
+    # If the recovered_hash matches hash_int this would mean that the signature is valid.
+    recovered_hash = rsa_verify(signature, signer_keys["e"], signer_keys["n"])
+    signature_valid = recovered_hash == hash_int
+
+    signature_verification = {
+        "original_hash": hash_int,
+        "recovered_hash": recovered_hash,
+        "valid": signature_valid,
+        "explanation": "Signature is valid because the recovered hash matches the original record hash."
+    }
+
     # This will run the simplified PBFT consensus
     consensus_passed, pbft_results = run_pbft_consensus(
         record=new_record,
@@ -209,8 +221,14 @@ def add_record(item_id, quantity, price, location, signer):
             "record": new_record,
             "submitting_node": f"Inventory {signer}",
             "hash_hex": hash_hex,
-            "hash_int": hash_int,
-            "signature": signature,
+            "hash_int": str(hash_int),
+            "signature": str(signature),
+            "signature_verification": {
+                "original_hash": str(signature_verification["original_hash"]),
+                "recovered_hash": str(signature_verification["recovered_hash"]),
+                "valid": signature_verification["valid"],
+                "explanation": signature_verification["explanation"]
+            },
             "pbft_results": pbft_results,
             "consensus_result": "REJECTED"
         }
@@ -228,9 +246,15 @@ def add_record(item_id, quantity, price, location, signer):
         "record": new_record,
         "submitting_node": f"Inventory {signer}",
         "hash_hex": hash_hex,
-        "hash_int": hash_int,
-        "signature": signature,
-         "pbft_results": pbft_results,
+        "hash_int": str(hash_int),
+        "signature": str(signature),
+        "signature_verification": {
+            "original_hash": str(signature_verification["original_hash"]),
+            "recovered_hash": str(signature_verification["recovered_hash"]),
+            "valid": signature_verification["valid"],
+            "explanation": signature_verification["explanation"]
+        },
+        "pbft_results": pbft_results,
         "consensus_result": "ACCEPTED"
     }
 
